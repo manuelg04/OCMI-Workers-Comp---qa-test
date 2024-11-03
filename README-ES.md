@@ -42,6 +42,12 @@ Tienes hasta el **15 de noviembre** para enviar tu prueba. Revisaremos tu códig
 
 **IMPORTANTE: Por favor, no asumas que rechazaremos una prueba incompleta. Buscamos calidad, no cantidad.**
 
+## Uso de Inteligencia Artificial
+
+Nos gusta que nuestras pruebas sean prácticas y realistas. Por lo tanto, **permitimos** el uso de herramientas de IA para ayudarte a escribir tus pruebas, ya que las utilizamos en nuestras operaciones diarias.
+
+Sin embargo, esperamos que entiendas el código que estás escribiendo y no dependas únicamente de herramientas de IA para generar tus pruebas.
+
 ## Solución de Problemas
 
 Si encuentras algún problema, no dudes en contactarnos. Estamos aquí para ayudarte a tener éxito.

@@ -43,6 +43,12 @@ You have until **November 15th** to submit your test. We will review your code a
 
 **IMPORTANT: Please do not assume we will reject an incomplete test. We are looking for quality, not quantity.**
 
+## Usage of Artificial Intelligence
+
+We like our tests to be practical and realistic. Therefore, we **allow** the use of AI tools to help you write your tests, since we use them in our day-to-day operations.
+
+However, we expect you to understand the code you are writing and not rely solely on AI tools to generate your tests.
+
 ## Troubleshooting
 
 If you encounter any issues at all, please don't hesitate to reach out to us. We are here to help you succeed.
