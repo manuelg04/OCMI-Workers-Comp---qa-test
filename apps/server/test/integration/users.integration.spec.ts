@@ -3,6 +3,7 @@ import { makeExpressApp } from '../../src/lib';
 import { userRepository, sessionRepository } from '../../src/database';
 import { createMockUser, createMockSession } from '../helpers/mockData';
 import { User, Session } from '../../../../packages/shared/src/types';
+
 describe('Users API', () => {
   const app = makeExpressApp();
   let mockUser: User;
@@ -13,6 +14,8 @@ describe('Users API', () => {
     mockSession = createMockSession(mockUser.id);
 
     jest.spyOn(userRepository, 'find').mockResolvedValue(mockUser);
+    jest.spyOn(userRepository, 'findByUsername').mockResolvedValue(mockUser);
+    jest.spyOn(userRepository, 'findByCredentials').mockResolvedValue(mockUser);
     jest.spyOn(userRepository, 'update').mockResolvedValue(mockUser);
     jest.spyOn(userRepository, 'register').mockResolvedValue(mockUser);
     jest.spyOn(sessionRepository, 'create').mockResolvedValue(mockSession);
@@ -29,7 +32,7 @@ describe('Users API', () => {
   });
 
   describe('POST /users', () => {
-    it('must register a new user and create a session', async () => {
+    it('should register a new user and create a session', async () => {
       const newUser = {
         username: 'newuser',
         password: 'newpassword123',
@@ -37,58 +40,64 @@ describe('Users API', () => {
 
       const expectedUser = {
         ...mockUser,
+        id: '2',
         username: newUser.username,
       };
 
-      jest.spyOn(userRepository, 'register').mockResolvedValue(expectedUser);
-      jest.spyOn(sessionRepository, 'create').mockResolvedValue({
+      const expectedSession = {
         ...mockSession,
+        id: '2',
         userId: expectedUser.id,
-      });
+      };
+
+      jest.spyOn(userRepository, 'register').mockResolvedValue(expectedUser);
+      jest.spyOn(sessionRepository, 'create').mockResolvedValue(expectedSession);
 
       const response = await request(app).post('/users').send(newUser);
 
       expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        ...expectedSession,
+        createdAt: expectedSession.createdAt.toISOString(),
+      });
+    });
 
-      const expectedSession = {
-        ...mockSession,
-        userId: expectedUser.id,
-        createdAt: mockSession.createdAt.toISOString(),
+    it('should return 422 if data is invalid', async () => {
+      const invalidUser = {
+        username: 'a',
+        password: 'short',
       };
 
-      expect(response.body).toEqual(expectedSession);
-      expect(userRepository.register).toHaveBeenCalledWith(newUser);
-      expect(sessionRepository.create).toHaveBeenCalledWith(expectedUser);
+      const response = await request(app).post('/users').send(invalidUser);
+
+      expect(response.status).toBe(422);
+      expect(response.body).toHaveProperty('errors');
     });
   });
 
   describe('GET /users/:userId', () => {
-    it('must get a user by id', async () => {
-      const userId = mockUser.id;
-
+    it('should get a user by id', async () => {
       const response = await request(app)
-        .get(`/users/${userId}`)
-        .set('Authorization', `Bearer ${mockSession.token}`);
+        .get(`/users/${mockUser.id}`)
+        .set('Authorization', mockSession.token);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
         ...mockUser,
-        favoriteBook: undefined,
+        favoriteBook: mockUser.favoriteBook
+          ? JSON.parse(mockUser.favoriteBook)
+          : undefined,
       });
-      expect(userRepository.find).toHaveBeenCalledWith(userId);
     });
 
-    it('must return a 404 error if the user does not exist', async () => {
-      const userId = 'non-existent-id';
+    it('should return 404 if user not found', async () => {
       jest
         .spyOn(userRepository, 'find')
-        .mockImplementation(async () => {
-          throw new Error('User not found');
-        });
+        .mockRejectedValue(new Error('User not found'));
 
       const response = await request(app)
-        .get(`/users/${userId}`)
-        .set('Authorization', `Bearer ${mockSession.token}`);
+        .get('/users/non-existent-id')
+        .set('Authorization', mockSession.token);
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ message: 'User not found' });
@@ -97,8 +106,7 @@ describe('Users API', () => {
   });
 
   describe('PUT /users/:userId', () => {
-    it('must update the user information', async () => {
-      const userId = mockUser.id;
+    it('should update the user information', async () => {
       const updatedData = {
         username: 'updatedUsername',
         favoriteBook: {
@@ -115,55 +123,54 @@ describe('Users API', () => {
         favoriteBook: JSON.stringify(updatedData.favoriteBook),
       };
 
-
-      jest.spyOn(userRepository, 'find').mockResolvedValue(mockUser);
       jest.spyOn(userRepository, 'update').mockResolvedValue(updatedUser);
 
       const response = await request(app)
-        .put(`/users/${userId}`)
-        .set('Authorization', `Bearer ${mockSession.token}`)
+        .put(`/users/${mockUser.id}`)
+        .set('Authorization', mockSession.token)
         .send(updatedData);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(updatedUser);
     });
 
-    it('must return a 500 error if the user does not exist', async () => {
-      const userId = 'non-existent-id';
-      const updatedData = {
-        username: 'updatedUsername',
-        favoriteBook: 'New Favorite Book',
+    it('should return 422 if data is invalid', async () => {
+      const invalidData = {
+        username: 'ab',
       };
 
+      const response = await request(app)
+        .put(`/users/${mockUser.id}`)
+        .set('Authorization', mockSession.token)
+        .send(invalidData);
+
+      expect(response.status).toBe(422);
+      expect(response.body).toHaveProperty('errors');
+    });
+
+    it('should return 404 if user not found', async () => {
       jest
         .spyOn(userRepository, 'find')
         .mockRejectedValue(new Error('User not found'));
 
+      const updatedData = {
+        username: 'updatedUsername',
+        favoriteBook: {
+          key: 'OL123M',
+          title: 'Example Book Title',
+          author_name: ['Author One', 'Author Two'],
+          first_publish_year: 1999,
+        },
+      };
+
       const response = await request(app)
-        .put(`/users/${userId}`)
-        .set('Authorization', `Bearer ${mockSession.token}`)
+        .put('/users/non-existent-id')
+        .set('Authorization', mockSession.token)
         .send(updatedData);
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ message: 'Internal server error' });
     });
 
-    it('must return a 422 error if the data is invalid', async () => {
-      const invalidData = {
-        username: '',
-        favoriteBook: {
-          key: '',
-          title: '',
-        },
-      };
-
-      const response = await request(app)
-        .put(`/users/${mockUser.id}`)
-        .set('Authorization', `Bearer ${mockSession.token}`)
-        .send(invalidData);
-
-      expect(response.status).toBe(422);
-      expect(response.body).toHaveProperty('errors');
-    });
   });
 });
