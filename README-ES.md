@@ -33,7 +33,7 @@ Por simplicidad, usamos SQLite como base de datos. No necesitas instalar ningún
 2. Sube tu código a un repositorio público en GitHub
 3. Envía un correo a [cristian@ocmiwc.com](mailto:cristian@ocmiwc.com) con el enlace a tu repositorio
 4. Vuelve a tu proyecto e instala las dependencias usando `yarn`
-5. Ejecuta las aplicaciones del servidor y cliente usando `nx run server:serve` y `nx run client:serve`
+5. Ejecuta las aplicaciones del servidor y cliente usando `npx nx run server:serve` y `npx nx run client:serve`
 6. El servidor se ejecutará en `http://localhost:3000` y el cliente en `http://localhost:4200`
 7. Puedes ejecutar pruebas usando `npx nx run <app>:test` o `npx nx run <app>-e2e:e2e`
 8. Sube los cambios conforme avances, revisaremos tu progreso
