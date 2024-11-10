@@ -28,7 +28,9 @@ vi.mock('../components', () => ({
   Button: ({
     children,
     ...props
-  }: { children: React.ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  }: {
+    children: React.ReactNode;
+  } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
   ),
   Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -38,7 +40,9 @@ vi.mock('../components', () => ({
   CardHeader: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  CardTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CardTitle: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock('lucide-react', () => ({
@@ -223,7 +227,9 @@ describe('UserProfile Component', () => {
 
     mockPut.mockRejectedValue(new Error('Update failed'));
 
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     render(<UserProfile />);
 
@@ -239,7 +245,7 @@ describe('UserProfile Component', () => {
       expect(mockPut).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error updating favorite book:',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
